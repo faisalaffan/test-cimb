@@ -7,7 +7,7 @@ import axios from 'axios'
 import { ResponseStruct, ResponseTimeout } from '../domain/local/ResponseStruct'
 
 const TIMEOUT = parseInt(process.env.TIMEOUT_API || '4000')
-const API_HOST = process.env.API_URL || 'http://localhost:3000/api/v1'
+const API_HOST = process.env.API_URL || 'https://gorest.co.in/public/v2'
 // const API_HOST = ''
 // const token = VueCookie.get('token')
 const token = ''
@@ -27,7 +27,7 @@ const get = (url: string) => {
                 code: data.code,
                 success: data.success,
                 message: data.message,
-                data: data.data,
+                data: data,
                 error: data.error,
                 pagination: data.pagination,
             })
