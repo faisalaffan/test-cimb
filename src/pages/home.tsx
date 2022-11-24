@@ -16,8 +16,11 @@ import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import UserService from '../usecase/UserService';
-import {UserNetworkStruct} from '../domain/network/UsersNetworkStruct';
-import {Container, Pagination, Stack, Typography} from "@mui/material";
+import {UserNetworkStruct, UserNetworkStructPayload} from '../domain/network/UsersNetworkStruct';
+import {Button, Container, Grid, Typography} from "@mui/material";
+import AppDialog from "../components/App/AppDialog";
+import AppButton from '../components/App/AppButton';
+import AppInputText from "../components/App/AppInputText";
 
 interface TablePaginationActionsProps {
     count: number;
@@ -95,7 +98,16 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
     );
 }
 
+interface Column {
+    id: 'name' | 'email' | 'gender' | 'action';
+    label: string;
+    minWidth?: number;
+    align?: 'right' | 'center';
+    format?: (value: number) => string;
+}
+
 const HomePage = () => {
+    const [dialog, setDialog] = React.useState(false as boolean);
     const [rows, setRows] = React.useState([] as any[]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -117,18 +129,11 @@ const HomePage = () => {
         setPage(0);
     };
 
-    interface Column {
-        id: 'name' | 'email' | 'gender' | 'size' | 'density';
-        label: string;
-        minWidth?: number;
-        align?: 'right';
-        format?: (value: number) => string;
-    }
-
     const headers: readonly Column[] = [
         {id: 'name', label: 'Name', minWidth: 170},
         {id: 'email', label: 'Email', minWidth: 170},
         {id: 'gender', label: 'Gender', minWidth: 170},
+        {id: 'action', label: 'Action', minWidth: 170, align: 'center'},
     ];
 
     React.useEffect(() => {
@@ -141,16 +146,88 @@ const HomePage = () => {
             }
             setRows(data)
         }
-        Promise.all([initPage()]).then((v) => {}).catch(err => {})
+        Promise.all([initPage()]).then((v) => {
+        }).catch(err => {
+        })
     }, [])
 
+    const printBody = () => {
+        const element = (row: any) => {
+            return (
+                <TableRow key={row?.id}>
+                    <TableCell component="th" scope="row">
+                        {row?.name}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {row?.email}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {row?.gender}
+                    </TableCell>
+                    <TableCell component="th" scope="row" align={'center'}>
+                        <AppButton type={'View'} onClick={() => {
+                            setDialog(true)
+                        }}/>
+                        <AppButton type={'Update'} onClick={() => {
+                            setDialog(true)
+                        }}/>
+                        <AppButton type={'Delete'} onClick={() => {
+                            setDialog(true)
+                        }}/>
+                    </TableCell>
+                </TableRow>
+            )
+        }
+        if (rowsPerPage > 0) {
+            return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                return (
+                    element(row)
+                )
+            })
+        } else {
+            return rows.map((row) => {
+                return (
+                    element(row)
+                )
+            })
+        }
+    }
+
+
+    const [payload, setPayload] = React.useState(new UserNetworkStructPayload({}));
 
     return (
         <>
+            {JSON.stringify(payload)}
+            <AppDialog open={dialog} onCancel={() => {
+                setDialog(false)
+            }} onSubmit={() => {
+                console.log('do cancel')
+            }} title={'Tambah Pengguna'} isShowSubmit={true}>
+                <AppInputText value={payload.name} label={'Nama'} type={'Text'} onChange={(v: any) => {
+                    setPayload({...payload, name: v.target.value})
+                }}/>
+                <AppInputText value={payload.name} label={'Gender'} type={'Text'} onChange={(v: any) => {
+                    setPayload({...payload, gender: v.target.value})
+                }}/>
+                <AppInputText value={payload.name} label={'Email'} type={'Text'} onChange={(v: any) => {
+                    setPayload({...payload, email: v.target.value})
+                }}/>
+            </AppDialog>
             <Container>
-                <Typography variant="h3" gutterBottom style={{marginTop: '10rem'}}>
-                    Daftar Pengguna
-                </Typography>
+                <Grid container spacing={2} style={{marginTop: '10rem'}} justifyContent={'center'}
+                      justifyItems={'center'} justifySelf={'center'}>
+                    <Grid lg={8} style={{paddingLeft: '1rem'}}>
+                        <Typography variant="h4" gutterBottom>
+                            Daftar Pengguna
+                        </Typography>
+                    </Grid>
+                    <Grid lg={4} textAlign={'right'}>
+                        <Button variant="contained" onClick={() => setDialog(true)}>
+                            Tambah
+                        </Button>
+                    </Grid>
+                </Grid>
                 <TableContainer component={Paper}>
                     <Table sx={{minWidth: 500}} aria-label="custom pagination table">
                         <TableHead>
@@ -167,27 +244,7 @@ const HomePage = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {(rowsPerPage > 0
-                                    ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    : rows
-                            ).map((row) => (
-                                <TableRow key={row.name}>
-                                    <TableCell component="th" scope="row">
-                                        {row.name}
-                                    </TableCell>
-                                    <TableCell component="th" scope="row">
-                                        {row.email}
-                                    </TableCell>
-                                    <TableCell component="th" scope="row">
-                                        {row.gender}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {emptyRows > 0 && (
-                                <TableRow style={{height: 53 * emptyRows}}>
-                                    <TableCell colSpan={6}/>
-                                </TableRow>
-                            )}
+                            {printBody()}
                         </TableBody>
                         <TableFooter>
                             <TableRow>
